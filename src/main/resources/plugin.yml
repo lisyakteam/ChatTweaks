@@ -1,0 +1,12 @@
+name: ChatTweaks
+version: '1.0'
+main: me.junioraww.chatTweaks.Main
+api-version: '1.21'
+commands:
+  hud:
+    description: Handle hud
+    aliases: [h]
+  test: {}
+permissions:
+  tweaks.vip: {}
+  tweaks.colors: {}
