@@ -1,4 +1,4 @@
-package me.junioraww.chatTweaks;
+package me.junioraww.chattweaks;
 
 import io.papermc.paper.event.player.AsyncChatEvent;
 import net.kyori.adventure.audience.Audience;
@@ -16,7 +16,9 @@ import net.luckperms.api.LuckPermsProvider;
 import net.luckperms.api.cacheddata.CachedMetaData;
 import net.luckperms.api.platform.PlayerAdapter;
 import org.bukkit.Bukkit;
+import org.bukkit.GameMode;
 import org.bukkit.Location;
+import org.bukkit.World;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
@@ -31,7 +33,6 @@ import org.bukkit.util.Vector;
 
 import java.io.File;
 import java.io.IOException;
-import java.nio.file.Path;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 import java.util.LinkedList;
@@ -50,7 +51,7 @@ public class ChatEvents implements Listener {
 
   private final JavaPlugin plugin;
 
-  private static final File chatHistoryFile = new File(Path.of("plugins/Chat/history.yml").toUri());
+  private static final File chatHistoryFile = new File(Main.getInstance().getDataFolder(), "history.yml");
   private final YamlConfiguration savedChatHistory = new YamlConfiguration();
 
   private final LinkedList<Component> chatHistory = new LinkedList<>();
@@ -133,7 +134,7 @@ public class ChatEvents implements Listener {
   @EventHandler(priority = EventPriority.LOW)
   public void playerJoined(PlayerJoinEvent event) {
     Player player = event.getPlayer();
-    var join = serializer.deserialize("<green>+ <gray>" + event.getPlayer().getName());
+    var join = playerJoined(player.getName());
     event.joinMessage(join);
     List<Component> historyToSend;
     synchronized (chatHistory) {
@@ -148,8 +149,20 @@ public class ChatEvents implements Listener {
     addChatHistory(join, join);
   }
 
+  public Component playerJoined(String name) {
+    return serializer.deserialize("<green>+ <gray>" + name);
+  }
+
+  public Component playerLeft(String name) {
+    return serializer.deserialize("<red>- <gray>" + name);
+  }
+
   @EventHandler
   public void playerDied(PlayerDeathEvent event) {
+    if (Main.getInstance().getVanishCommand().getVanishedPlayers().contains(event.getPlayer().getUniqueId())) {
+      event.deathMessage(null);
+      return;
+    }
     var eventMessage = event.deathMessage();
     if (eventMessage == null) return;
     var message = Component.text().color(TextColor.color(200, 200, 200)).append(eventMessage).build();
@@ -159,6 +172,10 @@ public class ChatEvents implements Listener {
 
   @EventHandler
   public void playerAdvancement(PlayerAdvancementDoneEvent event) {
+    if (event.getPlayer().isOp() || Main.getInstance().getVanishCommand().getVanishedPlayers().contains(event.getPlayer().getUniqueId())) {
+      event.message(null);
+      return;
+    }
     var eventMessage = event.message();
     if (eventMessage == null) return;
     var message = Component.text().color(TextColor.color(200, 200, 200)).append(eventMessage).build();
@@ -168,10 +185,16 @@ public class ChatEvents implements Listener {
 
   @EventHandler(priority = EventPriority.LOW)
   public void playerQuit(PlayerQuitEvent event) {
-    var quit = serializer.deserialize("<red>- <gray>" + event.getPlayer().getName());
+    if (Main.getInstance().getVanishCommand().getVanishedPlayers().contains(event.getPlayer().getUniqueId())) {
+      event.quitMessage(null);
+      return;
+    }
+    var quit = playerLeft(event.getPlayer().getName());
     event.quitMessage(quit);
     addChatHistory(quit, quit);
   }
+
+  public
 
   Pattern urlPattern = Pattern.compile("(https?://\\S+)");
 
@@ -195,9 +218,22 @@ public class ChatEvents implements Listener {
     CachedMetaData metaData = adapter.getMetaData(player);
     String prefix = Optional.ofNullable(metaData.getPrefix()).orElse("");
     String suffix = Optional.ofNullable(metaData.getSuffix()).orElse("");
-    Component nameFormat = serializer.deserialize(
-            prefix + player.getName() + suffix
-    );
+
+    String colorMeta = metaData.getMetaValue("chat-color");
+    String playerName = player.getName();
+    String coloredName;
+
+    if (colorMeta != null) {
+      if (colorMeta.startsWith("gradient:")) {
+        coloredName = "<" + colorMeta + ">" + playerName + "</gradient>";
+      } else {
+        coloredName = "<color:" + colorMeta + ">" + playerName + "</color>";
+      }
+    } else {
+      coloredName = "<white>" + playerName + "</white>";
+    }
+
+    Component nameFormat = serializer.deserialize(prefix + coloredName + suffix);
 
     plugin.getLogger().info(prefix + player.getName() + suffix + ": " + content);
 
@@ -236,6 +272,7 @@ public class ChatEvents implements Listener {
       Component visible = Component.textOfChildren(chatType.prefix, nameFormat, Component.text(": "), parsedContent).hoverEvent(getDefaultAbout(player));
 
       List<Player> receivers = new LinkedList<>();
+      int counter = 0;
 
       for (Audience viewer : viewers) {
         String receiverName = viewer.getOrDefault(Identity.NAME, null);
@@ -245,14 +282,15 @@ public class ChatEvents implements Listener {
             var receiverLoc = receiver.getLocation();
             Vector point = new Vector(receiverLoc.getX(), 0, receiverLoc.getBlockZ());
             if (chatType == ChatTypes.LOCAL) {
-              if (origin.distance(point) > 64) continue;
+              if (origin.distance(point) > 100) continue;
             }
+            if (receiver.getGameMode() != GameMode.SPECTATOR) counter++;
             receivers.add(receiver);
           }
         }
       }
 
-      Component vip = visible.hoverEvent(getVIPAbout(player, receivers.size()));
+      Component vip = visible.hoverEvent(getVIPAbout(player, counter));
 
       for (Player receiver : receivers) {
         if (receiver.hasPermission("tweaks.vip")) receiver.sendMessage(vip);
@@ -263,7 +301,7 @@ public class ChatEvents implements Listener {
         addChatHistory(visible, vip);
       }
 
-      if (receivers.size() == 1 && chatType == ChatTypes.LOCAL) {
+      if (counter == 1 && chatType == ChatTypes.LOCAL) {
         player.sendRichMessage("<yellow>Ваше сообщение никто не увидел!"
                 + "\n<white>Чтобы писать в <gold>глобальный чат</gold> (видный всем), пишите восклицательный знак в начале сообщения.</white>");
       }
@@ -284,7 +322,7 @@ public class ChatEvents implements Listener {
   private HoverEvent<Component> getVIPAbout(Player player, int receivers) {
     Component text = serializer.deserialize(
             "<gold><bold>↯</bold> <#ffcc00>Время: " + dtf.format(LocalTime.now())
-                    + "\n<gradient:#42ff9e:white>Увидело " + receivers + " из " + Bukkit.getOnlinePlayers().size()
+                    + "\n<gradient:#42ff9e:white>Увидело " + receivers + " из " + Main.getInstance().getVanishCommand().online()
                     + "\n<gray>Мир: <white>" + player.getWorld().getName()
                     + "</white>\n<gray>Пинг игрока: <white>" + player.getPing()
                     + "</white>\n<gray>Прорисовка: <white>" + player.getClientViewDistance()
@@ -293,10 +331,18 @@ public class ChatEvents implements Listener {
     return HoverEvent.showText(text);
   }
 
+  public static String getWorldName(World world) {
+    var environment = world.getEnvironment();
+    if (environment == World.Environment.NORMAL) return "<blue>Верхний";
+    if (environment == World.Environment.NETHER) return "<red>Нижний";
+    if (environment == World.Environment.THE_END) return "<purple>Энд";
+    return "<yellow>Новый";
+  }
+
   private HoverEvent<Component> getDefaultAbout(Player player) {
     Component text = serializer.deserialize(
             "<gold><bold>↯</bold> <#ffcc00>Время: " + dtf.format(LocalTime.now())
-                    + "\n<gray>Мир: <white>" + player.getWorld().getName()
+                    + "\n<gray>Мир: <white>" + getWorldName(player.getWorld())
                     + "</white>\n<gray>Пинг игрока: <white><bold>" + player.getPing()
                     + "</bold></white>\n<gray>Прорисовка: <white><bold>" + player.getClientViewDistance()
                     + "</bold></white>"

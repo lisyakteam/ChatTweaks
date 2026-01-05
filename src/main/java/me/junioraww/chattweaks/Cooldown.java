@@ -1,4 +1,4 @@
-package me.junioraww.chatTweaks;
+package me.junioraww.chattweaks;
 
 import org.bukkit.entity.Player;
 
