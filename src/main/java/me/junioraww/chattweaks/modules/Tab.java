@@ -11,7 +11,7 @@ public class Tab {
 
   public static void sendFancyTab(Player p) {
     Component header = mm.deserialize(
-            "<gray>--- <gradient:#AAC4F5:#F9DFDF><b>ЛИСЯК.РФ</b></gradient> ---</gray>\n" +
+            "<yellow>→ <gradient:#AAC4F5:#F9DFDF><b>Вы на режиме Кофе</b></gradient> ←</yellow>\n" +
                     "<gray>Добро пожаловать, <white>" + p.getName() + "</white>!\n"
     );
 

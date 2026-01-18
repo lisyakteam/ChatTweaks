@@ -9,7 +9,16 @@ commands:
   me: {}
   vanish:
     aliases: [v]
+  mute:
+    description: Мут игрока
+    permission: tweaks.mute
+  tell:
+    description: Личное сообщение
+    aliases: [ w, msg, m, whisper ]
 permissions:
   tweaks.vip: {}
   tweaks.colors: {}
   tweaks.vanish: {}
+  tweaks.mute: {}
+depend: [ LuckPerms ]
+softdepend: [ Skingram ]

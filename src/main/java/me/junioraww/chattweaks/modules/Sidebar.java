@@ -16,123 +16,115 @@ import java.util.concurrent.ConcurrentHashMap;
 public class Sidebar {
   private static final MiniMessage mm = MiniMessage.miniMessage();
   private static YamlConfiguration settings;
-
-  private static final Map<UUID, Scoreboard> boards = new ConcurrentHashMap<>();
-  private static final Set<UUID> hiddenPlayers = Collections.newSetFromMap(new ConcurrentHashMap<>());
-
   private static final List<BoardPage> pages = new ArrayList<>();
   private static int currentPageIndex = 0;
   private static String cachedOnline = "0";
+
+  private static final Map<UUID, String[]> lastSentLines = new ConcurrentHashMap<>();
 
   public static void init(YamlConfiguration _settings) {
     settings = _settings;
     loadPages();
 
     Bukkit.getScheduler().runTaskTimer(Main.getInstance(), () -> {
-      if (pages.size() > 1) {
-        currentPageIndex = (currentPageIndex + 1) % pages.size();
-      }
+      if (pages.size() > 1) currentPageIndex = (currentPageIndex + 1) % pages.size();
     }, 0L, 30 * 20L);
 
     Bukkit.getScheduler().runTaskTimer(Main.getInstance(), () -> {
-      cachedOnline = Main.getInstance().getVanishCommand().online() + "";
+      cachedOnline = String.valueOf(Main.getInstance().getVanishCommand().online());
 
       for (Player p : Bukkit.getOnlinePlayers()) {
-        if (hiddenPlayers.contains(p.getUniqueId())) continue;
+        if (isHudDisabled(p)) continue;
         updateSidebarText(p);
       }
-    }, 0L, 20L);
+    }, 0L, 30L);
   }
 
-  public static void togglePlayerHud(Player p, boolean hidden) {
-    if (hidden) {
-      hiddenPlayers.add(p.getUniqueId());
-      p.setScoreboard(Bukkit.getScoreboardManager().getMainScoreboard());
-      boards.remove(p.getUniqueId());
-    } else {
-      hiddenPlayers.remove(p.getUniqueId());
-      setupPlayerScoreboard(p);
-    }
-  }
-
-  public static void loadPages() {
-    pages.clear();
-    ConfigurationSection section = settings.getConfigurationSection("scoreboard.pages");
-    if (section == null) return;
-
-    for (String key : section.getKeys(false)) {
-      String title = section.getString(key + ".title", "");
-      List<String> lines = section.getStringList(key + ".lines");
-
-      Component titleComp = title.contains("%") ? null : mm.deserialize(title);
-      pages.add(new BoardPage(title, titleComp, lines));
-    }
+  private static boolean isHudDisabled(Player p) {
+    return Main.getSettings().getBoolean("player-settings." + p.getName().toLowerCase() + ".no-sidebar", false);
   }
 
   public static void setupPlayerScoreboard(Player p) {
-    UUID uuid = p.getUniqueId();
     Scoreboard b = Bukkit.getScoreboardManager().getNewScoreboard();
-
-    Objective obj = b.registerNewObjective("sidebar", Criteria.DUMMY, Component.empty());
-    obj.setDisplaySlot(DisplaySlot.SIDEBAR);
-
     Ping.setupForScoreboard(b);
 
+    Objective obj = b.registerNewObjective("sidebar", Criteria.DUMMY, Component.empty());
+    if (!isHudDisabled(p)) obj.setDisplaySlot(DisplaySlot.SIDEBAR);
+
     for (int i = 0; i < 15; i++) {
-      String entry = getEntry(i);
+      String entry = String.valueOf(org.bukkit.ChatColor.values()[i]);
       Team t = b.registerNewTeam("line" + i);
       t.addEntry(entry);
     }
 
-    boards.put(uuid, b);
     p.setScoreboard(b);
-    updateSidebarText(p); // Сразу обновляем текст
+    lastSentLines.put(p.getUniqueId(), new String[15]);
   }
 
   private static void updateSidebarText(Player p) {
-    Scoreboard b = boards.get(p.getUniqueId());
-    if (b == null || pages.isEmpty()) return;
-
-    BoardPage page = pages.get(currentPageIndex);
+    if (pages.isEmpty()) return;
+    Scoreboard b = p.getScoreboard();
     Objective obj = b.getObjective("sidebar");
     if (obj == null) return;
 
-    if (page.titleComp != null) {
-      obj.displayName(page.titleComp);
-    } else {
-      obj.displayName(mm.deserialize(page.rawTitle.replace("%player%", p.getName())));
-    }
+    BoardPage page = pages.get(currentPageIndex);
+    obj.displayName(page.titleComp != null ? page.titleComp : mm.deserialize(page.rawTitle.replace("%player%", p.getName())));
 
     List<String> lines = page.lines;
-    for (int i = 0; i < 15; i++) {
-      String entry = getEntry(i);
-      if (i < lines.size()) {
-        String rawLine = lines.get(i);
+    String[] cache = lastSentLines.get(p.getUniqueId());
 
-        String formatted = rawLine
+    for (int i = 0; i < 15; i++) {
+      String entry = String.valueOf(org.bukkit.ChatColor.values()[i]);
+      if (i < lines.size()) {
+        String rawLine = lines.get(i)
                 .replace("%online%", cachedOnline)
                 .replace("%player%", p.getName())
                 .replace("%ping%", String.valueOf(p.getPing()));
 
-        b.getTeam("line" + i).prefix(mm.deserialize(formatted));
+        if (cache != null && rawLine.equals(cache[i])) {
+          continue;
+        }
+
+        if (cache != null) cache[i] = rawLine;
+        b.getTeam("line" + i).prefix(mm.deserialize(rawLine));
 
         Score s = obj.getScore(entry);
-        int targetScore = lines.size() - i;
-        if (s.getScore() != targetScore) s.setScore(targetScore);
+        if (s.getScore() != lines.size() - i) s.setScore(lines.size() - i);
       } else {
-        b.resetScores(entry);
+        if (cache != null && cache[i] != null) {
+          b.resetScores(entry);
+          cache[i] = null;
+        }
       }
     }
+  }
+
+  public static void clearPlayerCache(Player p) {
+    lastSentLines.remove(p.getUniqueId());
+    p.setScoreboard(Bukkit.getScoreboardManager().getMainScoreboard());
+  }
+
+  public static void updateVisibility(Player p, boolean hidden) {
+    Scoreboard b = p.getScoreboard();
+    Objective obj = b.getObjective("sidebar");
+    if (obj != null) {
+      obj.setDisplaySlot(hidden ? null : DisplaySlot.SIDEBAR);
+    }
+    if (!hidden) updateSidebarText(p);
   }
 
   private static String getEntry(int i) {
     return ChatColor.values()[i].toString() + ChatColor.RESET;
   }
 
-  public static void clearPlayerCache(Player p) {
-    UUID uuid = p.getUniqueId();
-    boards.remove(uuid);
-    hiddenPlayers.remove(uuid);
+  public static void loadPages() {
+    pages.clear();
+    ConfigurationSection section = settings.getConfigurationSection("scoreboard.pages");
+    if (section == null) return;
+    for (String key : section.getKeys(false)) {
+      String title = section.getString(key + ".title", "");
+      pages.add(new BoardPage(title, title.contains("%") ? null : mm.deserialize(title), section.getStringList(key + ".lines")));
+    }
   }
 
   private record BoardPage(String rawTitle, Component titleComp, List<String> lines) {}

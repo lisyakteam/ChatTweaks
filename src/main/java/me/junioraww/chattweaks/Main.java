@@ -1,14 +1,12 @@
 package me.junioraww.chattweaks;
 
-import me.junioraww.chattweaks.commands.ColorsMenu;
-import me.junioraww.chattweaks.commands.HudCommand;
-import me.junioraww.chattweaks.commands.VanishCommand;
-import me.junioraww.chattweaks.modules.AutoMessages;
-import me.junioraww.chattweaks.modules.Ping;
-import me.junioraww.chattweaks.modules.Sidebar;
-import me.junioraww.chattweaks.modules.Tab;
+import me.junioraww.chattweaks.commands.*;
+import me.junioraww.chattweaks.listeners.AnvilEvents;
+import me.junioraww.chattweaks.listeners.ChatEvents;
+import me.junioraww.chattweaks.modules.*;
+import me.junioraww.chattweaks.utils.Cooldown;
+import me.junioraww.chattweaks.utils.EmojiProcessor;
 import org.bukkit.Bukkit;
-import org.bukkit.GameMode;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
@@ -19,6 +17,7 @@ import org.bukkit.plugin.java.JavaPlugin;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.concurrent.TimeUnit;
 
 public final class Main extends JavaPlugin implements Listener {
   private static YamlConfiguration settings;
@@ -54,19 +53,29 @@ public final class Main extends JavaPlugin implements Listener {
 
     Tab.init(settings);
     Sidebar.init(settings);
+    EmojiProcessor.load();
 
     AutoMessages.init(this);
 
     getServer().getPluginManager().registerEvents(this, this);
     getServer().getPluginManager().registerEvents(chatEvents, this);
+    getServer().getPluginManager().registerEvents(new CustomTriggerHandle(), this);
+    getServer().getPluginManager().registerEvents(new AnvilEvents(), this);
 
-    getServer().getPluginManager().registerEvents(new Ping(), this);
     Bukkit.getScheduler().runTaskTimer(this, Ping::updatePings, 40L, 40L);
 
     getCommand("hud").setExecutor(new HudCommand());
     ColorsMenu colorsMenu = new ColorsMenu(this);
     getCommand("me").setExecutor(colorsMenu);
     getServer().getPluginManager().registerEvents(colorsMenu, this);
+
+    MuteCommand muteCmd = new MuteCommand();
+    getCommand("mute").setExecutor(muteCmd);
+    getCommand("mute").setTabCompleter(muteCmd);
+
+    DMCommand dmCmd = new DMCommand();
+    getCommand("tell").setExecutor(dmCmd);
+    getCommand("tell").setTabCompleter(dmCmd);
 
     getCommand("vanish").setExecutor(vanishCommand);
     getServer().getPluginManager().registerEvents(new VanishListener(this, vanishCommand), this);
@@ -79,9 +88,15 @@ public final class Main extends JavaPlugin implements Listener {
 
   private void loadSettings() {
     settingsFile = new File(getDataFolder(), "config.yml");
-    if (!settingsFile.exists()) {
-      throw new RuntimeException("Create ChatTweaks/config.yml");
+
+    if (!getDataFolder().exists()) {
+      getDataFolder().mkdirs();
     }
+
+    if (!settingsFile.exists()) {
+      saveResource("config.yml", false);
+    }
+
     settings = YamlConfiguration.loadConfiguration(settingsFile);
   }
 

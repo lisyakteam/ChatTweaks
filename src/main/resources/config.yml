@@ -1,0 +1,24 @@
+scoreboard:
+  pages:
+    main:
+      title: <gradient:gold:white><bold>Coffee S1
+      lines:
+        - <green>Приветствуем!
+        - '<gray>Онлайн: <white>%online%'
+        - ''
+        - '<dark_gray>Скрыть: /h'
+        - '<dark_gray>Паки: /pack'
+        - ''
+        - <gradient:#AAC4F5:#F9DFDF><bold>лисяк.рф</bold></gradient>
+    info:
+      title: <gradient:yellow:white><bold>Coffee S1
+      lines:
+        - '<gray>Пинг: <white>%ping%ms'
+        - ''
+        - '<dark_gray>Цвет ника: /me'
+        - '<dark_gray>Присесть: /sit'
+        - ''
+        - <gradient:blue:white>t.me/LisyakTeam
+
+player-settings: {}
+mutes: {}

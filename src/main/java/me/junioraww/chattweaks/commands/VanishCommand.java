@@ -1,6 +1,6 @@
 package me.junioraww.chattweaks.commands;
 
-import me.junioraww.chattweaks.ChatEvents;
+import me.junioraww.chattweaks.listeners.ChatEvents;
 import me.junioraww.chattweaks.Main;
 import me.junioraww.chattweaks.modules.Tab;
 import org.bukkit.Bukkit;
@@ -23,7 +23,11 @@ public class VanishCommand implements CommandExecutor {
   private final Set<UUID> vanishedPlayers = new HashSet<>();
 
   public int online() {
-    return Bukkit.getOnlinePlayers().size() - vanishedPlayers.size();
+    int count = 0;
+    for (var player : Bukkit.getOnlinePlayers()) {
+      if (!vanishedPlayers.contains(player.getUniqueId())) count++;
+    }
+    return count;
   }
 
   public VanishCommand(JavaPlugin plugin) {
@@ -40,8 +44,8 @@ public class VanishCommand implements CommandExecutor {
         player.setGameMode(GameMode.SURVIVAL);
 
         ChatEvents chatEvents = Main.getInstance().getChatEvents();
-        var message = chatEvents.playerJoined(player.getName());
-        chatEvents.addChatHistory(message, message);
+        var message = ChatEvents.joinMessage(player.getName());
+        chatEvents.getHistory().add(message, message);
 
         for (Player onlinePlayer : Bukkit.getOnlinePlayers()) {
           onlinePlayer.showPlayer(plugin, player);
@@ -55,8 +59,8 @@ public class VanishCommand implements CommandExecutor {
         player.setGameMode(GameMode.SPECTATOR);
 
         ChatEvents chatEvents = Main.getInstance().getChatEvents();
-        var message = chatEvents.playerLeft(player.getName());
-        chatEvents.addChatHistory(message, message);
+        var message = ChatEvents.quitMessage(player.getName());
+        chatEvents.getHistory().add(message, message);
 
         for (Player onlinePlayer : Bukkit.getOnlinePlayers()) {
           onlinePlayer.sendMessage(message);

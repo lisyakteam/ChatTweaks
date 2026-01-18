@@ -7,7 +7,6 @@ import org.bukkit.Bukkit;
 import org.bukkit.configuration.file.YamlConfiguration;
 
 import java.io.File;
-import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
@@ -21,8 +20,13 @@ public class AutoMessages {
     messages = new LinkedList<>();
 
     var file = new File(plugin.getDataFolder(), "messages.yml");
+
+    if (!plugin.getDataFolder().exists()) {
+      plugin.getDataFolder().mkdirs();
+    }
+
     if (!file.exists()) {
-      throw new RuntimeException("Create ChatTweaks/config.yml");
+      plugin.saveResource("messages.yml", false);
     }
 
     var config = YamlConfiguration.loadConfiguration(file);
@@ -34,7 +38,7 @@ public class AutoMessages {
 
     Bukkit.getAsyncScheduler().runAtFixedRate(plugin, task -> {
       send();
-    }, 5, 10, TimeUnit.MINUTES);
+    }, 20, 20, TimeUnit.MINUTES);
   }
 
   private static void send() {
