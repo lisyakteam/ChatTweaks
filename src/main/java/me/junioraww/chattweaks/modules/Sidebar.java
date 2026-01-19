@@ -52,7 +52,7 @@ public class Sidebar {
     if (!isHudDisabled(p)) obj.setDisplaySlot(DisplaySlot.SIDEBAR);
 
     for (int i = 0; i < 15; i++) {
-      String entry = String.valueOf(org.bukkit.ChatColor.values()[i]);
+      String entry = String.valueOf(ChatColor.values()[i]);
       Team t = b.registerNewTeam("line" + i);
       t.addEntry(entry);
     }
@@ -74,7 +74,7 @@ public class Sidebar {
     String[] cache = lastSentLines.get(p.getUniqueId());
 
     for (int i = 0; i < 15; i++) {
-      String entry = String.valueOf(org.bukkit.ChatColor.values()[i]);
+      String entry = String.valueOf(ChatColor.values()[i]);
       if (i < lines.size()) {
         String rawLine = lines.get(i)
                 .replace("%online%", cachedOnline)

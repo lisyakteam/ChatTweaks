@@ -27,7 +27,7 @@ public class HistoryManager {
 
     Bukkit.getAsyncScheduler().runAtFixedRate(plugin, task -> {
       save();
-      Main.getInstance().getLogger().info("Saved history.yml");
+      //Main.getInstance().getLogger().info("Saved history.yml");
     }, 30L, 30L, TimeUnit.SECONDS);
   }
 

@@ -1,6 +1,8 @@
 package me.junioraww.chattweaks.listeners;
 
 import me.junioraww.chattweaks.Main;
+import me.junioraww.chattweaks.events.GlobalChatEvent;
+import me.junioraww.chattweaks.events.GlobalInfoEvent;
 import me.junioraww.chattweaks.history.HistoryManager;
 import me.junioraww.chattweaks.utils.*;
 import io.papermc.paper.event.player.AsyncChatEvent;
@@ -20,6 +22,8 @@ import org.bukkit.event.entity.PlayerDeathEvent;
 import org.bukkit.event.player.*;
 import org.bukkit.plugin.java.JavaPlugin;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 public class ChatEvents implements Listener {
@@ -48,38 +52,72 @@ public class ChatEvents implements Listener {
     if (event.isCancelled()) return;
     event.setCancelled(true);
 
-    Player player = event.getPlayer();
-    if (cooldown.check(player) > 0) {
+    final Player player = event.getPlayer();
+    final String raw = PlainTextComponentSerializer.plainText().serialize(event.message());
+
+    double cd = cooldown.check(player);
+    if (cd > 0) {
       player.sendMessage(Component.text("Не так быстро!", NamedTextColor.YELLOW));
       return;
     }
 
-    String raw = PlainTextComponentSerializer.plainText().serialize(event.message());
-    boolean isGlobal = raw.startsWith("!");
-    String cleanMsg = isGlobal ? raw.substring(1).trim() : raw;
-
+    final boolean isGlobal = raw.startsWith("!");
     if (isGlobal && handleMute(player)) return;
+
+    Bukkit.getLogger().info(player.getName() + ": " + raw);
+
+    final String cleanMsg = isGlobal ? raw.substring(1).trim() : raw;
 
     Component msgContent = ChatFormatter.parseContent(cleanMsg, player.hasPermission("tweaks.colors"));
     msgContent = EmojiProcessor.process(msgContent);
     if (isGlobal) msgContent = msgContent.color(TextColor.color(0xfffce0));
 
-    Component name = ChatFormatter.formatName(player, lp.getMetaData(player));
-    Component sep = isGlobal ? Component.text(" ⟩⟩ ", TextColor.color(0xffbf00), TextDecoration.BOLD)
-                               : Component.text(" ⟩ ", TextColor.color(0x89CFF0), TextDecoration.BOLD);
+    final Component name = ChatFormatter.formatName(player, lp.getMetaData(player));
+    final Component sep = isGlobal
+            ? Component.text(" ⟩⟩ ", TextColor.color(0xffbf00), TextDecoration.BOLD)
+            : Component.text(" ⟩ ", TextColor.color(0x89CFF0), TextDecoration.BOLD);
 
-    int count = 0;
-    for (Player viewer : Bukkit.getOnlinePlayers()) {
-      if (!isGlobal && player.getLocation().distance(viewer.getLocation()) > 100) continue;
-      count++;
+    final Component baseComponent = Component.textOfChildren(name, sep, msgContent);
 
-      Component finalMsg = Component.textOfChildren(name, sep, msgContent)
-              .hoverEvent(ChatFormatter.getHover(player, count, viewer.hasPermission("tweaks.vip")));
+    List<Player> recipients = new ArrayList<>();
+    if (isGlobal) {
+      recipients.addAll(Bukkit.getOnlinePlayers());
+    } else {
+      World world = player.getWorld();
+      Location playerLoc = player.getLocation();
+      double distSq = 100.0 * 100.0;
 
-      viewer.sendMessage(finalMsg);
+      for (Player viewer : world.getPlayers()) {
+        if (playerLoc.distanceSquared(viewer.getLocation()) <= distSq) {
+          recipients.add(viewer);
+        }
+      }
     }
 
-    if (isGlobal) history.add(Component.textOfChildren(name, sep, msgContent), Component.textOfChildren(name, sep, msgContent));
+    int count = recipients.size();
+
+    if (isGlobal) {
+      Bukkit.getScheduler().runTask(plugin, task -> {
+        new GlobalChatEvent(player.getName(), raw, count).callEvent();
+      });
+    }
+
+    Component vipMsg = baseComponent.hoverEvent(ChatFormatter.getHover(player, count, true));
+    Component regularMsg = baseComponent.hoverEvent(ChatFormatter.getHover(player, count, false));
+
+    for (Player viewer : recipients) {
+      viewer.sendMessage(viewer.hasPermission("tweaks.vip") ? vipMsg : regularMsg);
+    }
+
+    if (isGlobal) {
+      history.add(baseComponent, baseComponent);
+    }
+    else {
+      if (count <= 1) {
+        player.sendMessage(Component.text("Ваше сообщение не увидели!\nЧтобы писать в глобальный чат, видный всем, добавьте ! перед сообщением", TextColor.color(0x89CFF0)));
+      }
+    }
+
     checkMentions(player, cleanMsg);
   }
 
@@ -101,10 +139,12 @@ public class ChatEvents implements Listener {
   }
 
   public static Component joinMessage(String name) {
+    Bukkit.getScheduler().runTask(Main.getInstance(), task -> new GlobalInfoEvent(name + " зашел!").callEvent());
     return Component.text("+ ", NamedTextColor.GREEN).append(Component.text(name, NamedTextColor.GRAY));
   }
 
   public static Component quitMessage(String name) {
+    Bukkit.getScheduler().runTask(Main.getInstance(), task -> new GlobalInfoEvent(name + " вышел!").callEvent());
     return Component.text("- ", NamedTextColor.RED).append(Component.text(name, NamedTextColor.GRAY));
   }
 
@@ -122,6 +162,7 @@ public class ChatEvents implements Listener {
     if (isVanished(event.getEntity())) { event.deathMessage(null); return; }
     Component msg = Component.text().append(event.deathMessage()).color(TextColor.color(200, 200, 200)).build();
     event.deathMessage(msg);
+    new GlobalInfoEvent(PlainTextComponentSerializer.plainText().serialize(event.deathMessage())).callEvent();
     history.add(msg, msg);
   }
 
