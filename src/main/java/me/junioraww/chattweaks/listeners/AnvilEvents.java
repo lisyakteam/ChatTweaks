@@ -115,33 +115,6 @@ public class AnvilEvents implements Listener {
   public void onInventoryClick(InventoryClickEvent event) {
     if (!(event.getInventory() instanceof AnvilInventory anvil)) return;
 
-    if (event.getRawSlot() == 2) {
-      if (event.getCurrentItem() == null || event.getCurrentItem().getType() == Material.AIR) return;
-
-      ItemStack second = anvil.getSecondItem();
-      if (second == null || second.getType() == Material.AIR) return;
-
-      Material m = second.getType();
-      boolean shouldConsume = false;
-
-      if (m == Material.NETHER_STAR || m == Material.TORCHFLOWER || m == Material.ECHO_SHARD) {
-        shouldConsume = true;
-      } else if (m.name().endsWith("_DYE") && second.getAmount() == 64) {
-        anvil.setSecondItem(new ItemStack(Material.AIR));
-        return;
-      }
-
-      if (shouldConsume) {
-        org.bukkit.Bukkit.getScheduler().runTask(Main.getInstance(), () -> {
-          ItemStack currentSecond = anvil.getSecondItem();
-          if (currentSecond != null && currentSecond.getAmount() > 0) {
-            currentSecond.setAmount(currentSecond.getAmount() - 1);
-            anvil.setSecondItem(currentSecond);
-          }
-        });
-      }
-    }
-
     if (event.getRawSlot() == 0) {
       ItemStack item = event.getCurrentItem();
       if (item != null && item.getType() != Material.AIR && item.hasItemMeta()) {

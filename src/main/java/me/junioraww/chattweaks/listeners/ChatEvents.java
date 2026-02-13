@@ -2,6 +2,7 @@ package me.junioraww.chattweaks.listeners;
 
 import me.junioraww.chattweaks.Main;
 import me.junioraww.chattweaks.events.GlobalChatEvent;
+import me.junioraww.chattweaks.events.GlobalHistoryEvent;
 import me.junioraww.chattweaks.events.GlobalInfoEvent;
 import me.junioraww.chattweaks.history.HistoryManager;
 import me.junioraww.chattweaks.utils.*;
@@ -12,6 +13,7 @@ import net.kyori.adventure.text.format.NamedTextColor;
 import net.kyori.adventure.text.format.TextColor;
 import net.kyori.adventure.text.format.TextDecoration;
 import net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer;
+import net.kyori.adventure.translation.GlobalTranslator;
 import net.luckperms.api.LuckPermsProvider;
 import net.luckperms.api.platform.PlayerAdapter;
 import org.bukkit.*;
@@ -24,6 +26,7 @@ import org.bukkit.plugin.java.JavaPlugin;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 import java.util.concurrent.TimeUnit;
 
 public class ChatEvents implements Listener {
@@ -69,8 +72,8 @@ public class ChatEvents implements Listener {
     final String cleanMsg = isGlobal ? raw.substring(1).trim() : raw;
 
     Component msgContent = ChatFormatter.parseContent(cleanMsg, player.hasPermission("tweaks.colors"));
+    if (isGlobal) msgContent = msgContent.color(TextColor.color(0xffcf40));
     msgContent = EmojiProcessor.process(msgContent);
-    if (isGlobal) msgContent = msgContent.color(TextColor.color(0xfffce0));
 
     final Component name = ChatFormatter.formatName(player, lp.getMetaData(player));
     final Component sep = isGlobal
@@ -110,7 +113,7 @@ public class ChatEvents implements Listener {
     }
 
     if (isGlobal) {
-      history.add(baseComponent, baseComponent);
+      history.add(regularMsg, vipMsg);
     }
     else {
       if (count <= 1) {
@@ -167,12 +170,40 @@ public class ChatEvents implements Listener {
   }
 
   @EventHandler
+  public void onTelegramEvent(GlobalHistoryEvent event) {
+    var component = event.getComponent();
+    history.add(component, component);
+  }
+
+  @EventHandler
   public void onAdv(PlayerAdvancementDoneEvent event) {
-    if (event.getPlayer().isOp() || isVanished(event.getPlayer())) { event.message(null); return; }
-    if (event.message() == null) return;
-    Component msg = Component.text().append(event.message()).color(TextColor.color(200, 200, 200)).build();
-    event.message(msg);
-    history.add(msg, msg);
+    event.message(null);
+    if (isVanished(event.getPlayer())) { return; }
+
+    var display = event.getAdvancement().getDisplay();
+    if (display == null || !display.doesAnnounceToChat()) {
+      event.message(null);
+      return;
+    }
+
+    String frameKey = "chat.type.advancement." + display.frame().name().toLowerCase();
+
+    Component message = Component.translatable(frameKey)
+            .args(
+                    event.getPlayer().name(),
+                    display.title().hoverEvent(display.description())
+            )
+            .color(TextColor.color(200, 200, 200));
+
+    for (var player : Bukkit.getOnlinePlayers()) {
+      player.sendMessage(message);
+    }
+
+    Component translated = GlobalTranslator.render(message, Locale.forLanguageTag("ru-RU"));
+    String plainText = PlainTextComponentSerializer.plainText().serialize(translated);
+    new GlobalInfoEvent(plainText).callEvent();
+
+    history.add(message, message);
   }
 
   private boolean handleMute(Player p) {

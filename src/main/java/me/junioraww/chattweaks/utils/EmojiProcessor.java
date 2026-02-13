@@ -4,6 +4,7 @@ import net.kyori.adventure.key.Key;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.ObjectComponent;
 import net.kyori.adventure.text.TextReplacementConfig;
+import net.kyori.adventure.text.format.NamedTextColor;
 import net.kyori.adventure.text.object.ObjectContents;
 import net.kyori.adventure.text.object.SpriteObjectContents;
 import org.bukkit.Bukkit;
@@ -47,8 +48,9 @@ public class EmojiProcessor {
             String sprite = SPRITES.get(matchedText);
             if (sprite != null) {
               return Component.object(ObjectContents.sprite(
-                      Key.key("minecraft:items"),
-                      Key.key("emoji/" + sprite)));
+                              Key.key("minecraft:items"),
+                              Key.key("emoji/" + sprite)))
+                              .color(NamedTextColor.WHITE);
             }
           }
 
@@ -59,7 +61,8 @@ public class EmojiProcessor {
               if (sprite != null) {
                 return Component.object(ObjectContents.sprite(
                         Key.key("minecraft:items"),
-                        Key.key("emoji/" + sprite)));
+                        Key.key("emoji/" + sprite)))
+                        .color(NamedTextColor.WHITE);
               }
             }
           }
