@@ -36,7 +36,7 @@ public class EmojiProcessor {
 
   public static List<String> allEmojis;
 
-  private static final Pattern COMBINED_PATTERN = Pattern.compile("(:[a-z0-9-]+:)|(\\[emoji/[a-z0-9/._-]+@items\\])");
+  private static final Pattern COMBINED_PATTERN = Pattern.compile("(?i)(:[a-z0-9-]+:)|(\\[emoji/[a-z0-9/._-]+@items\\])");
 
   public static Component process(Component component) {
     return component.replaceText(TextReplacementConfig.builder()
@@ -45,7 +45,7 @@ public class EmojiProcessor {
           String matchedText = match.group();
 
           if (matchedText.startsWith(":")) {
-            String sprite = SPRITES.get(matchedText);
+            String sprite = SPRITES.get(matchedText.toLowerCase(Locale.ROOT));
             if (sprite != null) {
               return Component.object(ObjectContents.sprite(
                               Key.key("minecraft:items"),
@@ -55,7 +55,7 @@ public class EmojiProcessor {
           }
 
           else if (matchedText.startsWith("[")) {
-            String code = REVERSE_SPRITES.get(matchedText);
+            String code = REVERSE_SPRITES.get(matchedText.toLowerCase(Locale.ROOT));
             if (code != null) {
               String sprite = SPRITES.get(code);
               if (sprite != null) {
