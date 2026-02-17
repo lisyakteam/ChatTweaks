@@ -1,6 +1,7 @@
 package me.junioraww.chattweaks.listeners;
 
 import me.junioraww.chattweaks.Main;
+import me.junioraww.chattweaks.VanishListener;
 import me.junioraww.chattweaks.events.GlobalChatEvent;
 import me.junioraww.chattweaks.events.GlobalHistoryEvent;
 import me.junioraww.chattweaks.events.GlobalInfoEvent;
@@ -18,6 +19,7 @@ import net.luckperms.api.LuckPermsProvider;
 import net.luckperms.api.platform.PlayerAdapter;
 import org.bukkit.*;
 import org.bukkit.advancement.Advancement;
+import org.bukkit.advancement.AdvancementProgress;
 import org.bukkit.entity.Player;
 import org.bukkit.event.*;
 import org.bukkit.event.entity.PlayerDeathEvent;
@@ -30,14 +32,14 @@ import java.util.Locale;
 import java.util.concurrent.TimeUnit;
 
 public class ChatEvents implements Listener {
-  private final JavaPlugin plugin;
+  private final Main plugin;
   private final HistoryManager history;
   private final Cooldown cooldown = new Cooldown(2, 30);
   private final PlayerAdapter<Player> lp;
   private final NamespacedKey mentionKey;
   private Advancement mentionAdv;
 
-  public ChatEvents(JavaPlugin plugin) {
+  public ChatEvents(Main plugin) {
     this.plugin = plugin;
     this.history = new HistoryManager(plugin);
     this.lp = LuckPermsProvider.get().getPlayerAdapter(Player.class);
@@ -49,6 +51,8 @@ public class ChatEvents implements Listener {
   public HistoryManager getHistory() {
     return history;
   }
+
+  static double distSq = 100.0 * 100.0;
 
   @EventHandler(priority = EventPriority.LOW)
   public void onChat(AsyncChatEvent event) {
@@ -82,26 +86,27 @@ public class ChatEvents implements Listener {
 
     final Component baseComponent = Component.textOfChildren(name, sep, msgContent);
 
+    int count = 0;
+
     List<Player> recipients = new ArrayList<>();
     if (isGlobal) {
       recipients.addAll(Bukkit.getOnlinePlayers());
     } else {
       World world = player.getWorld();
       Location playerLoc = player.getLocation();
-      double distSq = 100.0 * 100.0;
 
       for (Player viewer : world.getPlayers()) {
         if (playerLoc.distanceSquared(viewer.getLocation()) <= distSq) {
           recipients.add(viewer);
+          if (!viewer.getGameMode().equals(GameMode.SPECTATOR) || !isVanished(viewer)) count++;
         }
       }
     }
 
-    int count = recipients.size();
-
     if (isGlobal) {
+      int finalCount = count;
       Bukkit.getScheduler().runTask(plugin, task -> {
-        new GlobalChatEvent(player.getName(), raw, count).callEvent();
+        new GlobalChatEvent(player.getName(), raw, finalCount).callEvent();
       });
     }
 
@@ -221,7 +226,11 @@ public class ChatEvents implements Listener {
     for (Player target : Bukkit.getOnlinePlayers()) {
       if (msg.contains(target.getName())) {
         target.playSound(net.kyori.adventure.sound.Sound.sound(Sound.BLOCK_NOTE_BLOCK_BELL, net.kyori.adventure.sound.Sound.Source.MASTER, 1f, 1f));
-        // Логика тоста...
+
+        Bukkit.getScheduler().runTask(plugin, task -> {
+          shooter.getAdvancementProgress(mentionAdv).revokeCriteria("trigger");
+          shooter.getAdvancementProgress(mentionAdv).awardCriteria("trigger");
+        });
       }
     }
   }
@@ -234,20 +243,22 @@ public class ChatEvents implements Listener {
     mentionAdv = Bukkit.getAdvancement(mentionKey);
     if (mentionAdv != null) return;
 
-    String json = "{"
-            + "  \"display\": {"
-            + "    \"icon\": {\"id\": \"minecraft:bell\"},"
-            + "    \"title\": {\"text\": \"Вас упомянули!\", \"color\": \"yellow\"},"
-            + "    \"description\": \"\","
-            + "    \"frame\": \"goal\","
-            + "    \"announce_to_chat\": false,"
-            + "    \"show_toast\": true,"
-            + "    \"hidden\": true"
-            + "  },"
-            + "  \"criteria\": {\"trigger\": {\"trigger\": \"minecraft:impossible\"}}"
-            + "}";
+    Bukkit.getScheduler().runTask(plugin, task -> {
+      String json = "{"
+              + "  \"display\": {"
+              + "    \"icon\": {\"id\": \"minecraft:bell\"},"
+              + "    \"title\": {\"text\": \"Вас упомянули!\", \"color\": \"yellow\"},"
+              + "    \"description\": \"\","
+              + "    \"frame\": \"task\","
+              + "    \"announce_to_chat\": false,"
+              + "    \"show_toast\": true,"
+              + "    \"hidden\": true"
+              + "  },"
+              + "  \"criteria\": {\"trigger\": {\"trigger\": \"minecraft:impossible\"}}"
+              + "}";
 
-    Bukkit.getUnsafe().loadAdvancement(mentionKey, json);
-    mentionAdv = Bukkit.getAdvancement(mentionKey);
+      Bukkit.getUnsafe().loadAdvancement(mentionKey, json);
+      mentionAdv = Bukkit.getAdvancement(mentionKey);
+    });
   }
 }
