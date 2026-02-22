@@ -1,7 +1,6 @@
 package me.junioraww.chattweaks.listeners;
 
 import me.junioraww.chattweaks.Main;
-import me.junioraww.chattweaks.VanishListener;
 import me.junioraww.chattweaks.events.GlobalChatEvent;
 import me.junioraww.chattweaks.events.GlobalHistoryEvent;
 import me.junioraww.chattweaks.events.GlobalInfoEvent;
@@ -19,12 +18,10 @@ import net.luckperms.api.LuckPermsProvider;
 import net.luckperms.api.platform.PlayerAdapter;
 import org.bukkit.*;
 import org.bukkit.advancement.Advancement;
-import org.bukkit.advancement.AdvancementProgress;
 import org.bukkit.entity.Player;
 import org.bukkit.event.*;
 import org.bukkit.event.entity.PlayerDeathEvent;
 import org.bukkit.event.player.*;
-import org.bukkit.plugin.java.JavaPlugin;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -98,7 +95,7 @@ public class ChatEvents implements Listener {
       for (Player viewer : world.getPlayers()) {
         if (playerLoc.distanceSquared(viewer.getLocation()) <= distSq) {
           recipients.add(viewer);
-          if (!viewer.getGameMode().equals(GameMode.SPECTATOR) || !isVanished(viewer)) count++;
+          if (!viewer.getGameMode().equals(GameMode.SPECTATOR) && !isVanished(viewer)) count++;
         }
       }
     }
@@ -126,7 +123,7 @@ public class ChatEvents implements Listener {
       }
     }
 
-    checkMentions(player, cleanMsg);
+    checkMentions(player, cleanMsg, recipients);
   }
 
   @EventHandler
@@ -222,14 +219,14 @@ public class ChatEvents implements Listener {
     return false;
   }
 
-  private void checkMentions(Player shooter, String msg) {
-    for (Player target : Bukkit.getOnlinePlayers()) {
+  private void checkMentions(Player shooter, String msg, List<Player> targets) {
+    for (Player target : targets) {
       if (msg.contains(target.getName())) {
         target.playSound(net.kyori.adventure.sound.Sound.sound(Sound.BLOCK_NOTE_BLOCK_BELL, net.kyori.adventure.sound.Sound.Source.MASTER, 1f, 1f));
 
         Bukkit.getScheduler().runTask(plugin, task -> {
-          shooter.getAdvancementProgress(mentionAdv).revokeCriteria("trigger");
-          shooter.getAdvancementProgress(mentionAdv).awardCriteria("trigger");
+          target.getAdvancementProgress(mentionAdv).revokeCriteria("trigger");
+          target.getAdvancementProgress(mentionAdv).awardCriteria("trigger");
         });
       }
     }
