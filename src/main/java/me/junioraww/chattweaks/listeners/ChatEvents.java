@@ -1,7 +1,6 @@
 package me.junioraww.chattweaks.listeners;
 
 import me.junioraww.chattweaks.Main;
-import me.junioraww.chattweaks.events.GlobalChatEvent;
 import me.junioraww.chattweaks.events.GlobalHistoryEvent;
 import me.junioraww.chattweaks.events.GlobalInfoEvent;
 import me.junioraww.chattweaks.history.HistoryManager;
@@ -83,6 +82,13 @@ public class ChatEvents implements Listener {
 
     final Component baseComponent = Component.textOfChildren(name, sep, msgContent);
 
+    Bukkit.getScheduler().runTask(plugin, () -> {
+      if (isGlobal) new GlobalInfoEvent(player.getName() + ": " + cleanMsg).callEvent();
+      handleChatSync(player, isGlobal, baseComponent, cleanMsg);
+    });
+  }
+
+  private void handleChatSync(Player player, boolean isGlobal, Component baseComponent, String cleanMsg) {
     int count = 0;
 
     List<Player> recipients = new ArrayList<>();
@@ -98,13 +104,6 @@ public class ChatEvents implements Listener {
           if (!viewer.getGameMode().equals(GameMode.SPECTATOR) && !isVanished(viewer)) count++;
         }
       }
-    }
-
-    if (isGlobal) {
-      int finalCount = count;
-      Bukkit.getScheduler().runTask(plugin, task -> {
-        new GlobalChatEvent(player.getName(), raw, finalCount).callEvent();
-      });
     }
 
     Component vipMsg = baseComponent.hoverEvent(ChatFormatter.getHover(player, count, true));
@@ -244,6 +243,7 @@ public class ChatEvents implements Listener {
       String json = "{"
               + "  \"display\": {"
               + "    \"icon\": {\"id\": \"minecraft:bell\"},"
+              + "    \"background\": \"minecraft:block/mushroom_stem\","
               + "    \"title\": {\"text\": \"Вас упомянули!\", \"color\": \"yellow\"},"
               + "    \"description\": \"\","
               + "    \"frame\": \"task\","

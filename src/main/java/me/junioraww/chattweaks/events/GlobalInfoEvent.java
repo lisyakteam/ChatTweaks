@@ -1,5 +1,6 @@
 package me.junioraww.chattweaks.events;
 
+import org.bukkit.Bukkit;
 import org.bukkit.event.Event;
 import org.bukkit.event.HandlerList;
 import org.jetbrains.annotations.NotNull;
@@ -11,10 +12,6 @@ public class GlobalInfoEvent extends Event {
 
   public GlobalInfoEvent(String text) {
     this.text = text;
-  }
-  
-  public String getUsername() {
-    return text;
   }
 
   @Override

@@ -109,6 +109,7 @@ public final class Main extends JavaPlugin implements Listener {
     }
   }
 
+  /* there is 1 more listener in ChatEvents */
   @EventHandler
   public void onJoin(PlayerJoinEvent event) {
     Player p = event.getPlayer();

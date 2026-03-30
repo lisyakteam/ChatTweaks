@@ -21,4 +21,3 @@ permissions:
   tweaks.vanish: {}
   tweaks.mute: {}
 depend: [ LuckPerms ]
-softdepend: [ Skingram ]

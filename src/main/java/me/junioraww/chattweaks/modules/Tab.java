@@ -3,7 +3,6 @@ package me.junioraww.chattweaks.modules;
 import me.junioraww.chattweaks.Main;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.minimessage.MiniMessage;
-import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 
 public class Tab {
