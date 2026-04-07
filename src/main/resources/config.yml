@@ -9,7 +9,7 @@ scoreboard:
         - '<dark_gray>Скрыть: /h'
         - '<dark_gray>Паки: /pack'
         - ''
-        - <gradient:#AAC4F5:#F9DFDF><bold>лисяк.рф</bold></gradient>
+        - <gradient:#AAC4F5:#F9DFDF><bold>lisyak.net</bold></gradient>
     info:
       title: <gradient:yellow:white><bold>Coffee S1
       lines:
@@ -19,6 +19,19 @@ scoreboard:
         - '<dark_gray>Присесть: /sit'
         - ''
         - <gradient:blue:white>t.me/LisyakTeam
+
+tab:
+  header:
+    - "<yellow>→ <gradient:#AAC4F5:#F9DFDF><b>Вы на режиме Кофе</b></gradient> ←</yellow>"
+    - "<gray>Добро пожаловать, <white>%player%</white>!"
+  footer:
+    - ""
+    - "<gray>Онлайн: <white>%online%</white>  <gray>Пинг: <white>%ping%ms</white>"
+    - ""
+    - "<gradient:#AAC4F5:#F9DFDF>t.me/LisyakTeam</gradient>"
+    - "<gradient:#F9DFDF:#AAC4F5>discord.gg/MC6ccff</gradient>"
+    - ""
+    - "<dark_gray>Приятной игры на нашем проекте!"
 
 player-settings: {}
 mutes: {}

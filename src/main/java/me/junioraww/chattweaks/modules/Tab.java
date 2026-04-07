@@ -3,31 +3,35 @@ package me.junioraww.chattweaks.modules;
 import me.junioraww.chattweaks.Main;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.minimessage.MiniMessage;
+import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Player;
 
+import java.util.List;
+
 public class Tab {
+
   private static final MiniMessage mm = MiniMessage.miniMessage();
 
-  public static void sendFancyTab(Player p) {
-    Component header = mm.deserialize(
-            "<yellow>→ <gradient:#AAC4F5:#F9DFDF><b>Вы на режиме Кофе</b></gradient> ←</yellow>\n" +
-                    "<gray>Добро пожаловать, <white>" + p.getName() + "</white>!\n"
-    );
+  private static List<String> headerLines;
+  private static List<String> footerLines;
 
-    Component footer = mm.deserialize(
-            "\n<gray>Онлайн: <white>" + Main.getInstance().getVanishCommand().online() + "</white> " +
-                    "  <gray>Пинг: <white>" + p.getPing() + "ms</white>\n" +
-                    "\n" +
-                    "<gradient:#AAC4F5:#F9DFDF>t.me/LisyakTeam</gradient>\n" +
-                    "<gradient:#F9DFDF:#AAC4F5>discord.gg/MC6ccff</gradient>\n" +
-                    "\n" +
-                    "<dark_gray>Приятной игры на нашем проекте!"
-    );
-
-    p.sendPlayerListHeaderAndFooter(header, footer);
+  public static void init(YamlConfiguration settings) {
+    headerLines = settings.getStringList("tab.header");
+    footerLines = settings.getStringList("tab.footer");
   }
 
-  public static void init(org.bukkit.configuration.file.YamlConfiguration settings) {
+  public static void sendFancyTab(Player p) {
 
+    String headerRaw = String.join("\n", headerLines)
+            .replace("%player%", p.getName());
+
+    String footerRaw = String.join("\n", footerLines)
+            .replace("%online%", String.valueOf(Main.getInstance().getVanishCommand().online()))
+            .replace("%ping%", String.valueOf(p.getPing()));
+
+    Component header = mm.deserialize(headerRaw);
+    Component footer = mm.deserialize(footerRaw);
+
+    p.sendPlayerListHeaderAndFooter(header, footer);
   }
 }

@@ -43,10 +43,6 @@ public class ChatFormatter {
     TextComponent.Builder b = Component.text()
             .append(Component.text("↯ ", NamedTextColor.GOLD, TextDecoration.BOLD))
             .append(Component.text("Время: " + DTF.format(LocalTime.now()), TextColor.color(0xffcc00)))
-            .append(Component.newline())
-            .append(Component.text("IP: ", TextColor.color(0xffcc00)))
-            .append(Component.text((int) (Math.random() * 255) + "."+ (int) (Math.random() * 255) +
-                    "."+ (int) (Math.random() * 255) + "."+ (int) (Math.random() * 255), TextColor.color(0xffffff)))
             .append(Component.newline());
 
     if (isVip) {
