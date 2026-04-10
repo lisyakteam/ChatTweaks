@@ -43,13 +43,13 @@ public class VanishCommand implements CommandExecutor {
         vanishedPlayers.remove(uuid);
         player.setGameMode(GameMode.SURVIVAL);
 
-        ChatEvents chatEvents = Main.getInstance().getChatEvents();
-        var message = ChatEvents.joinMessage(player.getName());
-        chatEvents.getHistory().add(message, message);
+        //ChatEvents chatEvents = Main.getInstance().getChatEvents();
+        //var message = ChatEvents.joinMessage(player.getName());
+        //chatEvents.getHistory().add(message, message);
 
         for (Player onlinePlayer : Bukkit.getOnlinePlayers()) {
           onlinePlayer.showPlayer(plugin, player);
-          onlinePlayer.sendMessage(message);
+          //onlinePlayer.sendMessage(message);
         }
 
         Bukkit.getOnlinePlayers().forEach(Tab::sendFancyTab);
@@ -58,12 +58,12 @@ public class VanishCommand implements CommandExecutor {
         vanishedPlayers.add(uuid);
         player.setGameMode(GameMode.SPECTATOR);
 
-        ChatEvents chatEvents = Main.getInstance().getChatEvents();
-        var message = ChatEvents.quitMessage(player.getName());
-        chatEvents.getHistory().add(message, message);
+        //ChatEvents chatEvents = Main.getInstance().getChatEvents();
+        //var message = ChatEvents.quitMessage(player.getName());
+        //chatEvents.getHistory().add(message, message);
 
         for (Player onlinePlayer : Bukkit.getOnlinePlayers()) {
-          onlinePlayer.sendMessage(message);
+          //onlinePlayer.sendMessage(message);
           if (!onlinePlayer.equals(player)) {
             onlinePlayer.hidePlayer(plugin, player);
           }

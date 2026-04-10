@@ -130,8 +130,8 @@ public class ChatEvents implements Listener {
     Player player = event.getPlayer();;
     if (isVanished(player)) { event.joinMessage(null); return; }
 
-    Component msg = joinMessage(player.getName());
-    event.joinMessage(msg);
+    //Component msg = joinMessage(player.getName());
+    event.joinMessage(null);
 
     var logs = history.get(player.hasPermission("tweaks.vip"));
     if (!logs.isEmpty()) player.sendMessage(Component.join(JoinConfiguration.newlines(), logs));
@@ -139,7 +139,7 @@ public class ChatEvents implements Listener {
     /* Поддержка эмодзи-completion блять */
     player.addCustomChatCompletions(EmojiProcessor.allEmojis);
 
-    history.add(msg, msg);
+    //history.add(msg, msg);
   }
 
   public static Component joinMessage(String name) {
@@ -156,9 +156,9 @@ public class ChatEvents implements Listener {
   public void onQuit(PlayerQuitEvent event) {
     if (isVanished(event.getPlayer())) { event.quitMessage(null); return; }
 
-    Component msg = quitMessage(event.getPlayer().getName());
-    event.quitMessage(msg);
-    history.add(msg, msg);
+    //Component msg = quitMessage(event.getPlayer().getName());
+    event.quitMessage(null);
+    //history.add(msg, msg);
   }
 
   @EventHandler
