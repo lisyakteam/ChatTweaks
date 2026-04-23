@@ -7,9 +7,6 @@ import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
 import net.kyori.adventure.text.format.TextColor;
 import net.kyori.adventure.text.format.TextDecoration;
-import net.luckperms.api.LuckPermsProvider;
-import net.luckperms.api.model.user.User;
-import net.luckperms.api.node.types.MetaNode;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
@@ -49,9 +46,9 @@ public class ColorsMenu implements CommandExecutor, Listener {
   public boolean onCommand(@NotNull CommandSender sender, @NotNull Command command, @NotNull String label, @NotNull String[] args) {
     if (!(sender instanceof Player player)) return true;
 
-    var user = LuckPermsProvider.get().getUserManager().getUser(player.getUniqueId());
+    /*var user = LuckPermsProvider.get().getUserManager().getUser(player.getUniqueId());
     String currentColor = (user != null) ? user.getCachedData().getMetaData().getMetaValue(META_KEY) : null;
-    pendingSelections.put(player.getUniqueId(), currentColor != null ? currentColor : "#FFFFFF");
+    pendingSelections.put(player.getUniqueId(), currentColor != null ? currentColor : "#FFFFFF");*/
 
     openInventory(player);
     return true;
@@ -169,7 +166,7 @@ public class ColorsMenu implements CommandExecutor, Listener {
   }
 
   private void applyFinalColor(Player player) {
-    String finalColor = pendingSelections.get(player.getUniqueId());
+    /*String finalColor = pendingSelections.get(player.getUniqueId());
     var lp = LuckPermsProvider.get();
     User user = lp.getUserManager().getUser(player.getUniqueId());
 
@@ -187,11 +184,11 @@ public class ColorsMenu implements CommandExecutor, Listener {
           player.sendMessage(Component.text("Цвет ника успешно обновлен!", NamedTextColor.GREEN));
         });
       });
-    }
+    }*/
   }
 
   public static void updatePlayerDisplay(Player player) {
-    var lp = LuckPermsProvider.get();
+    /*var lp = LuckPermsProvider.get();
     var user = lp.getUserManager().getUser(player.getUniqueId());
     if (user == null) return;
 
@@ -199,6 +196,6 @@ public class ColorsMenu implements CommandExecutor, Listener {
     Component nick = Component.empty();//ChatFormatter.formatName(player, meta);
 
     player.displayName(nick);
-    player.playerListName(nick);
+    player.playerListName(nick);*/
   }
 }

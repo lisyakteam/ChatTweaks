@@ -8,8 +8,6 @@ import net.kyori.adventure.text.event.HoverEvent;
 import net.kyori.adventure.text.format.NamedTextColor;
 import net.kyori.adventure.text.format.TextColor;
 import net.kyori.adventure.text.format.TextDecoration;
-import net.kyori.adventure.text.object.ObjectContents;
-import net.luckperms.api.cacheddata.CachedMetaData;
 import org.bukkit.World;
 import org.bukkit.entity.Player;
 import java.time.LocalTime;

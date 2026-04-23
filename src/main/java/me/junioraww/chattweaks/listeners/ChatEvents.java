@@ -16,8 +16,6 @@ import net.kyori.adventure.text.object.ObjectContents;
 import net.kyori.adventure.text.object.PlayerHeadObjectContents;
 import net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer;
 import net.kyori.adventure.translation.GlobalTranslator;
-import net.luckperms.api.LuckPermsProvider;
-import net.luckperms.api.platform.PlayerAdapter;
 import org.bukkit.*;
 import org.bukkit.advancement.Advancement;
 import org.bukkit.entity.Player;
@@ -36,14 +34,12 @@ public class ChatEvents implements Listener {
   private final Main plugin;
   private final HistoryManager history;
   private final Cooldown cooldown = new Cooldown(2, 30);
-  private final PlayerAdapter<Player> lp;
   private final NamespacedKey mentionKey;
   private Advancement mentionAdv;
 
   public ChatEvents(Main plugin) {
     this.plugin = plugin;
     this.history = new HistoryManager(plugin);
-    this.lp = LuckPermsProvider.get().getPlayerAdapter(Player.class);
     this.mentionKey = new NamespacedKey(plugin, "mention_toast");
     setupAdvancement();
     Bukkit.getAsyncScheduler().runAtFixedRate(plugin, task -> cooldown.cleanup(), 5, 5, TimeUnit.MINUTES);
@@ -128,7 +124,7 @@ public class ChatEvents implements Listener {
   }
 
   private void handleChatSync(Player player, boolean isGlobal, Component baseComponent, String cleanMsg) {
-    int count = 0;
+    int count = isGlobal ? Bukkit.getOnlinePlayers().size() : 0;
 
     List<Player> recipients = new ArrayList<>();
     if (isGlobal) {
