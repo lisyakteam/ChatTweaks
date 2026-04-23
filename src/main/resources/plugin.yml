@@ -3,10 +3,9 @@ version: '1.0'
 main: me.junioraww.chattweaks.Main
 api-version: '1.21'
 commands:
-  hud:
+  board:
     description: Handle hud
-    aliases: [h]
-  me: {}
+    aliases: [b, h]
   vanish:
     aliases: [v]
   mute:

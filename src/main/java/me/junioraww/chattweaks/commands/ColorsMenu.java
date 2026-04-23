@@ -196,7 +196,7 @@ public class ColorsMenu implements CommandExecutor, Listener {
     if (user == null) return;
 
     var meta = user.getCachedData().getMetaData();
-    Component nick = ChatFormatter.formatName(player, meta);
+    Component nick = Component.empty();//ChatFormatter.formatName(player, meta);
 
     player.displayName(nick);
     player.playerListName(nick);

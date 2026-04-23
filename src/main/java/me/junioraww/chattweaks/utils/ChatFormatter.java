@@ -20,15 +20,6 @@ public class ChatFormatter {
   private static final DateTimeFormatter DTF = DateTimeFormatter.ofPattern("HH:mm:ss");
   private static final Pattern URL_PATTERN = Pattern.compile("(https?://\\S+)");
 
-  public static Component formatName(Player p, CachedMetaData meta) {
-    Component head = Component.object(ObjectContents.playerHead(p.getName()));
-    Component name = GradientUtil.apply(p.getName(), meta.getMetaValue("chat-color"));
-    Component prefix = Component.text(meta.getPrefix() != null ? meta.getPrefix() : "");
-    Component suffix = Component.text(meta.getSuffix() != null ? meta.getSuffix() : "");
-
-    return Component.textOfChildren(head, Component.space(), prefix, name, suffix);
-  }
-
   public static Component parseContent(String msg, boolean hasColor) {
     Component base = Component.text(msg);
 

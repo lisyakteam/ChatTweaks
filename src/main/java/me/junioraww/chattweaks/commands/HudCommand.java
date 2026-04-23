@@ -21,9 +21,9 @@ public class HudCommand implements CommandExecutor {
     Sidebar.updateVisibility(player, newState);
 
     if (!newState) {
-      player.sendRichMessage("<green>✔ HUD включен!");
+      player.sendRichMessage("<green>✔ Таблица включена");
     } else {
-      player.sendRichMessage("<yellow>➜ HUD отключен!");
+      player.sendRichMessage("<yellow>✔ Таблица выключена");
     }
     return true;
   }

@@ -4,7 +4,6 @@ import me.junioraww.chattweaks.commands.*;
 import me.junioraww.chattweaks.listeners.AnvilEvents;
 import me.junioraww.chattweaks.listeners.ChatEvents;
 import me.junioraww.chattweaks.modules.*;
-import me.junioraww.chattweaks.utils.Cooldown;
 import me.junioraww.chattweaks.utils.EmojiProcessor;
 import org.bukkit.Bukkit;
 import org.bukkit.configuration.file.YamlConfiguration;
@@ -17,7 +16,6 @@ import org.bukkit.plugin.java.JavaPlugin;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.concurrent.TimeUnit;
 
 public final class Main extends JavaPlugin implements Listener {
   private static YamlConfiguration settings;
@@ -64,9 +62,9 @@ public final class Main extends JavaPlugin implements Listener {
 
     Bukkit.getScheduler().runTaskTimer(this, Ping::updatePings, 40L, 40L);
 
-    getCommand("hud").setExecutor(new HudCommand());
+    getCommand("board").setExecutor(new HudCommand());
     ColorsMenu colorsMenu = new ColorsMenu(this);
-    getCommand("me").setExecutor(colorsMenu);
+    //getCommand("me").setExecutor(colorsMenu);
     getServer().getPluginManager().registerEvents(colorsMenu, this);
 
     MuteCommand muteCmd = new MuteCommand();
@@ -84,6 +82,11 @@ public final class Main extends JavaPlugin implements Listener {
       Sidebar.setupPlayerScoreboard(p);
       Tab.sendFancyTab(p);
     }
+  }
+
+  @Override
+  public void onDisable() {
+
   }
 
   private void loadSettings() {
@@ -120,7 +123,7 @@ public final class Main extends JavaPlugin implements Listener {
     }
 
     Bukkit.getOnlinePlayers().forEach(Tab::sendFancyTab);
-    ColorsMenu.updatePlayerDisplay(p);
+    //ColorsMenu.updatePlayerDisplay(p);
   }
 
   @EventHandler

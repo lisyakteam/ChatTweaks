@@ -53,7 +53,7 @@ public class VanishCommand implements CommandExecutor {
         }
 
         Bukkit.getOnlinePlayers().forEach(Tab::sendFancyTab);
-        player.sendMessage("§aВы теперь видимы для всех!");
+        player.sendMessage("§aТеперь вы видимы для всех!");
       } else {
         vanishedPlayers.add(uuid);
         player.setGameMode(GameMode.SPECTATOR);

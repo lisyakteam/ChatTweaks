@@ -1,5 +1,6 @@
 package me.junioraww.chattweaks.listeners;
 
+import com.destroystokyo.paper.profile.ProfileProperty;
 import me.junioraww.chattweaks.Main;
 import me.junioraww.chattweaks.events.GlobalHistoryEvent;
 import me.junioraww.chattweaks.events.GlobalInfoEvent;
@@ -11,6 +12,8 @@ import net.kyori.adventure.text.JoinConfiguration;
 import net.kyori.adventure.text.format.NamedTextColor;
 import net.kyori.adventure.text.format.TextColor;
 import net.kyori.adventure.text.format.TextDecoration;
+import net.kyori.adventure.text.object.ObjectContents;
+import net.kyori.adventure.text.object.PlayerHeadObjectContents;
 import net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer;
 import net.kyori.adventure.translation.GlobalTranslator;
 import net.luckperms.api.LuckPermsProvider;
@@ -21,6 +24,8 @@ import org.bukkit.entity.Player;
 import org.bukkit.event.*;
 import org.bukkit.event.entity.PlayerDeathEvent;
 import org.bukkit.event.player.*;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -75,17 +80,51 @@ public class ChatEvents implements Listener {
     if (isGlobal) msgContent = msgContent.color(TextColor.color(0xffcf40));
     msgContent = EmojiProcessor.process(msgContent);
 
-    final Component name = ChatFormatter.formatName(player, lp.getMetaData(player));
+    Component playerHead = Component.object(
+            ObjectContents.playerHead().profileProperty(
+                    new ChatHead(player)
+            ).build()
+    );
+
+    final Component name = me.junioraww.tails.listeners.Nametag.getDisplayedName(player);
     final Component sep = isGlobal
             ? Component.text(" ⟩⟩ ", TextColor.color(0xffbf00), TextDecoration.BOLD)
             : Component.text(" ⟩ ", TextColor.color(0x89CFF0), TextDecoration.BOLD);
 
-    final Component baseComponent = Component.textOfChildren(name, sep, msgContent);
+    final Component baseComponent = Component.textOfChildren(playerHead, Component.space(), name, sep, msgContent);
 
     Bukkit.getScheduler().runTask(plugin, () -> {
       if (isGlobal) new GlobalInfoEvent(player.getName() + ": " + cleanMsg).callEvent();
       handleChatSync(player, isGlobal, baseComponent, cleanMsg);
     });
+  }
+
+  private class ChatHead implements PlayerHeadObjectContents.ProfileProperty {
+    private Player player;
+
+    public ChatHead(Player player) {
+      this.player = player;
+    }
+
+    @Override
+    public @NotNull String name() {
+      return "textures";
+    }
+
+    @Override
+    public @NotNull String value() {
+      return player.getPlayerProfile()
+              .getProperties()
+              .stream()
+              .filter(p -> p.getName().equals("textures"))
+              .findFirst()
+              .map(ProfileProperty::getValue).get();
+    }
+
+    @Override
+    public @Nullable String signature() {
+      return "";
+    }
   }
 
   private void handleChatSync(Player player, boolean isGlobal, Component baseComponent, String cleanMsg) {

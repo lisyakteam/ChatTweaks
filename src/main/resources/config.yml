@@ -1,17 +1,16 @@
 scoreboard:
   pages:
     main:
-      title: <gradient:gold:white><bold>Coffee S1
+      title: <sprite:"minecraft:items":texts/lisyak/title-0><sprite:"minecraft:items":texts/lisyak/title-1><sprite:"minecraft:items":texts/lisyak/title-2><sprite:"minecraft:items":texts/lisyak/title-3><sprite:"minecraft:items":texts/lisyak/title-4><sprite:"minecraft:items":texts/lisyak/title-5>
       lines:
-        - <green>Приветствуем!
         - '<gray>Онлайн: <white>%online%'
         - ''
-        - '<dark_gray>Скрыть: /h'
+        - '<dark_gray>Скрыть: /board'
         - '<dark_gray>Паки: /pack'
         - ''
         - <gradient:#AAC4F5:#F9DFDF><bold>lisyak.net</bold></gradient>
     info:
-      title: <gradient:yellow:white><bold>Coffee S1
+      title: <sprite:"minecraft:items":texts/lisyak/title-0><sprite:"minecraft:items":texts/lisyak/title-1><sprite:"minecraft:items":texts/lisyak/title-2><sprite:"minecraft:items":texts/lisyak/title-3><sprite:"minecraft:items":texts/lisyak/title-4><sprite:"minecraft:items":texts/lisyak/title-5>
       lines:
         - '<gray>Пинг: <white>%ping%ms'
         - ''
